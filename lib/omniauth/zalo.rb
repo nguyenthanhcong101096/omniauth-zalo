@@ -1,8 +1,12 @@
-require "omniauth/zalo/version"
+require 'rails'
+require 'set'
+require 'active_support/dependencies'
+require 'omniauth/zalo/version'
+require 'omniauth/strategies/zalo'
 
 module Omniauth
   module Zalo
     class Error < StandardError; end
-    # Your code goes here...
+    class Engine < ::Rails::Engine; end
   end
 end
