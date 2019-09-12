@@ -5,21 +5,30 @@ module OmniAuth
   module Strategies
     class Zalo < OmniAuth::Strategies::OAuth2
       option :name, 'zalo'
-      option :fields, 'id,birthday,name,gender,picture'
 
       option :client_options, {
         site: 'https://oauth.zaloapp.com',
-        authorize_url: 'v3/auth',
-        token_url: '/v3/access_token'
+        authorize_url: '/v3/auth',
+        token_url: '/v3/access_token',
+        token_method: :get
       }
 
-      def callback_phase
-        options[:client_options][:site] = 'https://graph.zalo.me/v2.0/me'
-        super
+      uid { raw_info['userId'] }
+
+      info do
+        {
+          name:        raw_info['displayName'],
+          image:       raw_info['pictureUrl'],
+          description: raw_info['statusMessage']
+        }
+      end
+
+      def authorize_params
+        super.merge(app_id: self.options.client_id)
       end
 
       alias :old_callback_url :callback_url
-      
+
       def callback_url
         if request.params['callback_url']
           request.params['callback_url']
@@ -37,21 +46,9 @@ module OmniAuth
           URI(params['callback_url']).path
         end
       end
-      
-      uid { raw_info['userId'] }
-
-      info do
-        {
-          name:        raw_info['displayName'],
-          email:       raw_info['email'],
-          image:       raw_info['pictureUrl'],
-          description: raw_info['statusMessage'],
-          info:        raw_info
-        }
-      end
 
       def raw_info
-        @raw_info ||= JSON.load(access_token.get('v2/profile').body)
+        @raw_info ||= JSON.load(access_token.get('https://graph.zalo.me/v2.0/me').body)
       rescue ::Errno::ETIMEDOUT
         raise ::Timeout::Error
       end
