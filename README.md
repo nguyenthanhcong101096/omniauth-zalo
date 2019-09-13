@@ -21,6 +21,13 @@ Or install it yourself as:
     $ gem install omniauth-zalo
 
 ## Usage
+omniauth.rb
+
+```
+Rails.application.config.middleware.use OmniAuth::Builder do
+  provider :zalo, ENV['APP_ID'], env['SERECT_ID']
+end
+```
 
 TODO: Write usage instructions here
 
