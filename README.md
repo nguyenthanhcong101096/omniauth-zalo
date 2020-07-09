@@ -21,7 +21,7 @@ Or install it yourself as:
 ## Usage
 omniauth.rb
 
-```
+```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :zalo, ENV['APP_ID'], env['SERECT_ID']
 end
