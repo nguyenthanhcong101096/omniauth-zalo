@@ -8,12 +8,13 @@ module OmniAuth
 
       option :client_options, {
         site: 'https://oauth.zaloapp.com',
-        authorize_url: '/v3/auth',
-        token_url: '/v3/access_token',
-        token_method: :get,
+        authorize_url: '/v4/permission',
+        token_url: '/v4/access_token',
+        token_method: :post
       }
 
       option :provider_ignores_state, true
+      option :pkce, true
 
       uid { raw_info['id'] }
 
@@ -29,12 +30,20 @@ module OmniAuth
       end
 
       def build_access_token
-        token_url_params = {app_id: options.client_id, app_secret: options.client_secret, code: request.params['code'], redirect_uri: callback_url}.merge(token_params.to_hash(:symbolize_keys => true))
-        parsed_response = client.request(options.client_options.token_method, client.token_url(token_url_params), parse: :json).parsed
+        token_url_params = {app_id: options.client_id, grant_type: 'authorization_code', code: request.params['code'], redirect_uri: callback_url}.merge(token_params.to_hash(:symbolize_keys => true))
+        parsed_response = client.request(
+                                          options.client_options.token_method,
+                                          client.token_url(token_url_params),
+                                          parse: :json,
+                                          headers: {'secret_key' => options.client_secret}
+                                        )
+                                .parsed
+
         hash = {
           :access_token => parsed_response["access_token"],
           :expires_in => parsed_response["expires_in"],
         }
+
         ::OAuth2::AccessToken.from_hash(client, hash)
       end
 
